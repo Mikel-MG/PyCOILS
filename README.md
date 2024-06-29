@@ -1,3 +1,14 @@
+# PyCOILS
+A Python implementation of the classic COILS program
+
+## Motivation
+
+## Features
+
+## Development
+
+## References
+
 ToDo
 * [ ] Simple profiling
 * [ ] GitHub page
