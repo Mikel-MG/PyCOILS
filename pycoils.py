@@ -6,10 +6,12 @@ from pathlib import Path
 import numpy as np
 
 
-def read_fasta(input_fasta, N=10):
+def read_fasta(input_fasta, N=50000):
     """
     Yields header and sequences in fasta file
     Support for multi-line and single_line formats
+
+    By default, it will only return the first 50000 sequences
     """
     N_seqs = 0
     with open(input_fasta, "r") as inpt:
