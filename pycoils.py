@@ -7,12 +7,10 @@ from typing import Dict, Iterator, List, Tuple
 import numpy as np
 
 
-def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[Tuple[str, str]]:
+def read_fasta(input_fasta: str, N: int = 10) -> Iterator[Tuple[str, str]]:
     """
     Yields header and sequences in fasta file
     Support for multi-line and single_line formats
-
-    By default, it will only return the first 50000 sequences
     """
     N_seqs = 0
     with open(input_fasta, "r") as inpt:
