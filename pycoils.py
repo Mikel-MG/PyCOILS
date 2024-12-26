@@ -2,11 +2,12 @@ from copy import deepcopy
 from itertools import product
 from math import e, pi
 from pathlib import Path
+from typing import Dict, Iterator, List, Tuple
 
 import numpy as np
 
 
-def read_fasta(input_fasta, N=50000):
+def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[Tuple[str, str]]:
     """
     Yields header and sequences in fasta file
     Support for multi-line and single_line formats
@@ -16,7 +17,6 @@ def read_fasta(input_fasta, N=50000):
     N_seqs = 0
     with open(input_fasta, "r") as inpt:
         header = None
-        sequence = []
 
         for line in inpt:
             line = line.strip()
@@ -35,7 +35,7 @@ def read_fasta(input_fasta, N=50000):
             yield header, "".join(sequence).upper()
 
 
-def weight_matrix(dict_aa):
+def weight_matrix(dict_aa: Dict[str, Dict[str, float]]) -> Dict[str, Dict[str, float]]:
     """
     2 out of 7 residues are core positions, so the the weight of the other 5 has to be
     distributed in these two, thus 5/2=2.5
@@ -49,7 +49,7 @@ def weight_matrix(dict_aa):
     return weighted_aa
 
 
-def compute_g(score, mean, sd):
+def compute_g(score: float, mean: float, sd: float) -> float:
     """
     Computes a g score from  the normal distribution
     Not to be confused with COILS score, stored in the full_coils_matrix
@@ -58,7 +58,7 @@ def compute_g(score, mean, sd):
     return g
 
 
-def compute_geo_mean(vec_win_score, root_correction):
+def compute_geo_mean(vec_win_score: np.ndarray, root_correction: float) -> np.float16:
     """
     Calculates the geometrical mean of a vector of scores.
     It depends on the root_correction attribute
@@ -116,13 +116,13 @@ class PyCOILS:
 
     def predict_sequence(
         self,
-        sequence,
-        window_size=21,
-        matrix="MTIDK",
-        weighted="w",
-        frame="best",
-        return_scores=False,
-    ):
+        sequence: str,
+        window_size: int = 21,
+        matrix: str = "MTIDK",
+        weighted: str = "w",
+        frame: str = "best",
+        return_scores: bool = False,
+    ) -> Dict[str, np.ndarray]:
 
         # sanitize input parameters
         assert self._sanitize_input(
@@ -168,13 +168,14 @@ class PyCOILS:
 
     def run_on_file(
         self,
-        input_fasta,
-        window_size=21,
-        matrix="MTIDK",
-        weighted="w",
-        frame="best",
-        return_scores=False,
-    ):
+        input_fasta: str,
+        window_size: int = 21,
+        matrix: str = "MTIDK",
+        weighted: str = "w",
+        frame: str = "best",
+        return_scores: bool = False,
+    ) -> Iterator[Tuple[str, Dict[str, np.ndarray]]]:
+
         generator_sequences = read_fasta(input_fasta)
         for header, sequence in generator_sequences:
             results = self.predict_sequence(
@@ -183,7 +184,7 @@ class PyCOILS:
 
             yield header, results
 
-    def test_vs_COILS(self, graphics=False):
+    def test_vs_COILS(self, graphics: bool = False) -> None:
         """
         This function checks the consistency of this COILS implementation with the GCN4
         prediction of the original COILS, for [u/uw], MTK, [14,21,28] parameters
@@ -233,13 +234,15 @@ class PyCOILS:
                 if graphics:
                     # this import is here to avoid creating an unnecessary dependency when running
                     # predictions
-                    import matplotlib.pyplot as plt
+                    import matplotlib.pyplot as plt  # type: ignore
 
                     plt.plot(reference, alpha=0.5)
                     plt.plot(prediction, alpha=0.5)
                     plt.show()
 
-    def _load_param_file(self, mat_file):
+    def _load_param_file(
+        self, mat_file: str
+    ) -> Tuple[Dict[str, Dict[str, List]], Dict[str, Dict[str, float]]]:
         """
         This function loads data & parameters from old.mat and new.mat
         Each contains a matrix of substitutions (MTK or MTIDK),
@@ -248,8 +251,8 @@ class PyCOILS:
         returns dict_states, dict_aa
         """
 
-        dict_stats = {}
-        dict_aa = {}
+        dict_stats: Dict[str, Dict[str, List]] = {}
+        dict_aa: Dict[str, Dict[str, float]] = {}
         register = self.register
 
         with open(mat_file, "r") as inpt:
@@ -286,8 +289,15 @@ class PyCOILS:
         return dict_stats, dict_aa
 
     def _sanitize_input(
-        self, sequence, window_size, matrix, weighted, frame, return_scores
-    ):
+        self,
+        sequence: str,
+        window_size: int,
+        matrix: str,
+        weighted: str,
+        frame: str,
+        return_scores: bool,
+    ) -> bool:
+
         try:
             assert type(sequence) == str
             assert window_size in [14, 21, 28]
@@ -301,7 +311,9 @@ class PyCOILS:
             return False
 
     # @profile
-    def _compute_full_matrix(self, sequence, window_size, matrix, weighted):
+    def _compute_full_matrix(
+        self, sequence: str, window_size: int, matrix: str, weighted: str
+    ) -> np.ndarray:
         """
         This function takes a sequence (string, uppercase) and the parameters
         window_size: int (21), weighted: bool (True)
