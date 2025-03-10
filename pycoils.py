@@ -122,14 +122,28 @@ class PyCOILS:
         weighted: str = "w",
         frame: str = "best",
         return_scores: bool = False,
+        return_register: bool = False,
     ) -> Dict[str, np.ndarray]:
 
         # sanitize input parameters
         assert self._sanitize_input(
-            sequence, window_size, matrix, weighted, frame, return_scores
+            sequence,
+            window_size,
+            matrix,
+            weighted,
+            frame,
+            return_scores,
+            return_register,
         )
 
+        if return_register is True:
+            try:
+                assert frame == "best"
+            except AssertionError:
+                print("return_register must be used with frame='best'")
+
         # compute the full matrix scores
+        # mat_score_full.shape = (register_size, sequence_size, window_size)
         full_coils_matrix = self._compute_full_matrix(
             sequence, window_size, matrix, weighted
         )
@@ -163,6 +177,22 @@ class PyCOILS:
 
         if return_scores == True:
             result["coils_scores"] = final_scores_mat
+
+        if return_register == True:
+            # mat_score_full.shape = (register_size, sequence_size, window_size)
+            # first we select the best window position, and then we extract the best register index for each position
+
+            # this holds the most fitting *starting* register
+            index_start_register = full_coils_matrix.max(axis=2).argmax(axis=0)
+
+            # offset each residue's register to obtain current register
+            index_cumulative_register = index_start_register + np.arange(len(sequence))
+
+            # modulo operation to obtain the actual register (loop 0-6)
+            index_register = index_cumulative_register % 7
+
+            list_register = ["abcdefg"[i] for i in index_register]
+            result["coils_register"] = list_register
 
         return result
 
@@ -296,6 +326,7 @@ class PyCOILS:
         weighted: str,
         frame: str,
         return_scores: bool,
+        return_register: bool,
     ) -> bool:
 
         try:
@@ -305,6 +336,7 @@ class PyCOILS:
             assert weighted in ["w", "uw"]
             assert frame in ["best", "all"]
             assert return_scores in [True, False]
+            assert return_register in [True, False]
             return True
         except AssertionError:
             print("Your input parameters are wrong and you should be ashamed")
@@ -381,16 +413,29 @@ if __name__ == "__main__":
     print(pycoils.dict_ref_params.keys())
     # print(pycoils.dict_ref_params)
 
+    # Test vs reference COILS
+    print()
+    pycoils.test_vs_COILS(graphics=False)
+    print()
+
     # Test loading a sequence
     test_sequence = f"{pycoils.source_path}/tests/gcn4.fasta"
     seq_reader = read_fasta(test_sequence)
     header, sequence = next(seq_reader)
 
     # Test running a prediction
-    results = pycoils.predict_sequence(sequence)
+    results = pycoils.predict_sequence(
+        sequence, return_scores=True, return_register=True
+    )
     coils_prob = results["coils_prob"]
+    coils_scores = results["coils_scores"]
+    coils_register = results["coils_register"]
 
-    print(coils_prob.shape)
-    # print(coils_prob)
+    print(f"Size of coiled-coil probability vector: {coils_prob.shape}")
+    print(f"Size of coiled-coil score vector: {coils_scores.shape}")
+    print(f"Size of register list: {len(coils_register)}")
+    print()
 
-    pycoils.test_vs_COILS(graphics=False)
+    print("".join(["C" if i > 0.5 else "_" for i in coils_prob])[-80:])
+    print("".join(coils_register)[-80:])
+    print(sequence[-80:])
