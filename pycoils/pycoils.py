@@ -1,5 +1,4 @@
 from copy import deepcopy
-from itertools import product
 from math import e, pi
 from pathlib import Path
 from typing import Iterator
@@ -88,7 +87,8 @@ class PyCOILS:
 
                 # process parameters for each window size
                 for window_size in [14, 21, 28]:
-                    print(f"Loading parameters for {mat_name}/{weighted}/{window_size}")
+                    # debug
+                    # print(f"Loading parameters for {mat_name}/{weighted}/{window_size}")
 
                     # compute the weighting and the root correction if necessary
                     if weighted == "w":
@@ -213,62 +213,6 @@ class PyCOILS:
             )
 
             yield header, results
-
-    def test_vs_COILS(self, graphics: bool = False) -> None:
-        """
-        This function checks the consistency of this COILS implementation with the GCN4
-        prediction of the original COILS, for [u/uw], MTK, [14,21,28] parameters
-        """
-        # Test loading a sequence
-        test_sequence = f"{self.source_path}/tests/gcn4.fasta"
-        seq_reader = read_fasta(test_sequence)
-        _, gcn4_sequence = next(seq_reader)
-
-        list_test_params = list(product(["w", "uw"], ["MTK"]))
-        list_win_size = [14, 21, 28]
-
-        pycoils = PyCOILS()
-
-        for weight, matrix in list_test_params:
-            # load reference prediction from the original COILS
-            ref_filename = f"{self.source_path}/tests/original_coils/COILS_GCN4_{weight}_{matrix}.results"
-            data_val = []
-            with open(ref_filename, "r") as inpt:
-                for line in inpt:
-                    data = line.strip().split()
-                    data_val.append([float(data[i]) for i in [4, 7, 10]])
-            mat_val = np.array(data_val)
-
-            # compute prediction with this implementation of COILS
-            data_pred = []
-            for i_win_size in list_win_size:
-                pycoils_pred = pycoils.predict_sequence(
-                    gcn4_sequence,
-                    window_size=i_win_size,
-                    matrix=matrix,
-                    weighted=weight,
-                )
-                data_pred.append(pycoils_pred["coils_prob"])
-            mat_pred = np.array(data_pred).T
-
-            # compare reference vs prediction values
-            for i in range(3):
-                reference = mat_val[:, i]
-                prediction = mat_pred[:, i]
-                # print(reference[:10])
-                # print(prediction[:10])
-                assert np.allclose(reference, prediction, atol=5e-2)
-                print(
-                    f"COILS vs PyCOILS @ matrix {matrix} {weight} {list_win_size[i]}: [OK]"
-                )
-                if graphics:
-                    # this import is here to avoid creating an unnecessary dependency when running
-                    # predictions
-                    import matplotlib.pyplot as plt  # type: ignore
-
-                    plt.plot(reference, alpha=0.5)
-                    plt.plot(prediction, alpha=0.5)
-                    plt.show()
 
     def _load_param_file(
         self, mat_file: str
@@ -404,38 +348,3 @@ class PyCOILS:
                     np.arange(window_size),
                 ] = geo_mean
         return mat_score_full
-
-
-if __name__ == "__main__":
-    pycoils = PyCOILS()
-
-    # Test loaded parameters
-    print(pycoils.dict_ref_params.keys())
-    # print(pycoils.dict_ref_params)
-
-    # Test vs reference COILS
-    print()
-    pycoils.test_vs_COILS(graphics=False)
-    print()
-
-    # Test loading a sequence
-    test_sequence = f"{pycoils.source_path}/tests/gcn4.fasta"
-    seq_reader = read_fasta(test_sequence)
-    header, sequence = next(seq_reader)
-
-    # Test running a prediction
-    results = pycoils.predict_sequence(
-        sequence, return_scores=True, return_register=True
-    )
-    coils_prob = results["coils_prob"]
-    coils_scores = results["coils_scores"]
-    coils_register = results["coils_register"]
-
-    print(f"Size of coiled-coil probability vector: {coils_prob.shape}")
-    print(f"Size of coiled-coil score vector: {coils_scores.shape}")
-    print(f"Size of register list: {len(coils_register)}")
-    print()
-
-    print("".join(["C" if i > 0.5 else "_" for i in coils_prob])[-80:])
-    print("".join(coils_register)[-80:])
-    print(sequence[-80:])
