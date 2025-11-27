@@ -16,3 +16,8 @@ authors = [
 dependencies = [
     "numpy",
 ]
+
+[tool.setuptools.package-data]
+"pycoils" = ["matrices/*.mat",
+             "tests/*.fasta",
+             "tests/original_coils/*.results"]
