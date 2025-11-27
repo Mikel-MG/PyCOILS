@@ -9,6 +9,24 @@ Coiled coils are common structural motifs found in proteins, the fundamental cat
 Why have I created this repository? Mainly for myself, to be honest. Making the code publicly available was the motivation I required to clean up the code and refactor it into a more presentable format. But, incidentally, I think it serves as a nice 'Exhibit A' of early bioinformatics algorithms. In this re-implementation, I have prioritized legibility and simplicity over efficiency. This is to say, the original code may have run faster. That being said, the program presents a couple of additions over the original COILS, which I think may motivate some users to utilize my version. If you do so, please cite the original COILS research article, which can be found in the **References** section.
 
 
+## Installation
+
+PyCOILS can be downloaded, packaged and installed via pip like this:
+
+```bash
+# to install the latest PyCOILS version
+pip install git+https://github.com/Mikel-MG/PyCOILS.git
+
+# to run the test checks (optional but recommended) 
+python -m pycoils.testing
+```
+
+
+## Usage
+
+There is an [example notebook](./examples/examples.ipynb) that illustrates how to use the program and its features.
+
+
 ## Features
 
 * PyCOILS reproduces the behaviour and results of the original COILS, but can be easily integrated into Python scripts, for analysis and visualization.
@@ -24,10 +42,6 @@ Why have I created this repository? Mainly for myself, to be honest. Making the 
 * The classic COILS program computes, for each residue, the highest score among different possible registers and windows. PyCOILS' *allframe* mode provides not only the *best* score, but the best score for every frame separately. This is useful to a) automatically detect discontinuities in the heptad register, and b) detect coiled-coil sequences with multiple potential registers.  
 
 ![alt text](./examples/figures/allframe_MYH1_HUMAN.png)
-
-## Instructions
-
-There is an [example notebook](./examples/examples.ipynb) that illustrates how to use the program and its features.
 
 
 ## Future work
