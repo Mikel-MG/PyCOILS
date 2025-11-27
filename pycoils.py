@@ -2,12 +2,12 @@ from copy import deepcopy
 from itertools import product
 from math import e, pi
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple
+from typing import Iterator
 
 import numpy as np
 
 
-def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[Tuple[str, str]]:
+def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[tuple[str, str]]:
     """
     Yields header and sequences in fasta file
     Support for multi-line and single_line formats
@@ -35,7 +35,7 @@ def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[Tuple[str, str]]:
             yield header, "".join(sequence).upper()
 
 
-def weight_matrix(dict_aa: Dict[str, Dict[str, float]]) -> Dict[str, Dict[str, float]]:
+def weight_matrix(dict_aa: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
     """
     2 out of 7 residues are core positions, so the the weight of the other 5 has to be
     distributed in these two, thus 5/2=2.5
@@ -58,7 +58,7 @@ def compute_g(score: float, mean: float, sd: float) -> float:
     return g
 
 
-def compute_geo_mean(vec_win_score: np.ndarray, root_correction: float) -> np.float16:
+def compute_geo_mean(vec_win_score: np.ndarray, root_correction: float) -> np.float64:
     """
     Calculates the geometrical mean of a vector of scores.
     It depends on the root_correction attribute
@@ -123,7 +123,7 @@ class PyCOILS:
         frame: str = "best",
         return_scores: bool = False,
         return_register: bool = False,
-    ) -> Dict[str, np.ndarray]:
+    ) -> dict[str, np.ndarray]:
 
         # sanitize input parameters
         assert self._sanitize_input(
@@ -204,7 +204,7 @@ class PyCOILS:
         weighted: str = "w",
         frame: str = "best",
         return_scores: bool = False,
-    ) -> Iterator[Tuple[str, Dict[str, np.ndarray]]]:
+    ) -> Iterator[tuple[str, dict[str, np.ndarray]]]:
 
         generator_sequences = read_fasta(input_fasta)
         for header, sequence in generator_sequences:
@@ -272,7 +272,7 @@ class PyCOILS:
 
     def _load_param_file(
         self, mat_file: str
-    ) -> Tuple[Dict[str, Dict[str, List]], Dict[str, Dict[str, float]]]:
+    ) -> tuple[dict[str, dict[str, list]], dict[str, dict[str, float]]]:
         """
         This function loads data & parameters from old.mat and new.mat
         Each contains a matrix of substitutions (MTK or MTIDK),
@@ -281,8 +281,8 @@ class PyCOILS:
         returns dict_states, dict_aa
         """
 
-        dict_stats: Dict[str, Dict[str, List]] = {}
-        dict_aa: Dict[str, Dict[str, float]] = {}
+        dict_stats: dict[str, dict[str, list]] = {}
+        dict_aa: dict[str, dict[str, float]] = {}
         register = self.register
 
         with open(mat_file, "r") as inpt:
