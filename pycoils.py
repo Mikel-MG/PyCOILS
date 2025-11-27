@@ -7,12 +7,12 @@ from typing import Iterator
 import numpy as np
 
 
-def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[tuple[str, str]]:
+def read_fasta(input_fasta: str, N_max: None | int = None) -> Iterator[tuple[str, str]]:
     """
-    Yields header and sequences in fasta file
-    Support for multi-line and single_line formats
+    Yields tuples of (header, sequence) in the fasta file
+    Supports multi-line and single-line formats
 
-    By default, it will only return the first 50000 sequences
+    N_max allows to only read a limited number of sequences
     """
     N_seqs = 0
     with open(input_fasta, "r") as inpt:
@@ -24,7 +24,7 @@ def read_fasta(input_fasta: str, N: int = 50000) -> Iterator[tuple[str, str]]:
                 if header is not None:
                     yield header, "".join(sequence).upper()
                     N_seqs += 1
-                    if N_seqs >= N:
+                    if N_max is not None and N_seqs >= N_max:
                         break
                 header = line
                 sequence = []
