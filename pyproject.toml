@@ -1,0 +1,19 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyCOILS" 
+version = "1.0.0"
+description = "A Python implementation of the classic COILS program"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    { name = "Mikel Martinez Goikoetxea", email = "mikel.martinez@tuebingen.mpg.de " }
+]
+dependencies = [
+    "numpy",
+    "matplotlib"
+]
